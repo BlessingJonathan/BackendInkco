@@ -64,13 +64,18 @@ app.post("/signup", async (req, res) => {
 });
 app.post('/login', async (req, res) => {
   try {
+    
+    const { authenticateUser } = await import('auth');
+
     const { email, password } = req.body;
     const user = await authenticateUser(email, password);
+
     res.json({ message: 'Login successful', user });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
+
 app.get('/getproducts', async (req, res) => {
   try {
     await client.connect();
