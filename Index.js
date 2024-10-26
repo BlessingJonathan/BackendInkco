@@ -5,7 +5,6 @@ const { MongoClient } = require("mongodb");
 const app = express();
 const PORT = process.env.PORT || 3001;
 const cors = require("cors")
-const { authenticateUser } = require('auth');
 const bodyParser = require('body-parser');
 const uri = process.env.MDB_CONNECTION_STRING
 
