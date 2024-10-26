@@ -61,6 +61,7 @@ app.post("/signup", async (req, res) => {
     res.status(500).json({ message: error.message || `Internal Server Error: ${error}`});
   }
 });
+/*
 app.post('/login', async (req, res) => {
   try {
     
@@ -74,7 +75,7 @@ app.post('/login', async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
-
+*/
 app.get('/getproducts', async (req, res) => {
   try {
     await client.connect();
