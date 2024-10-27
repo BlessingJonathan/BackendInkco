@@ -1,8 +1,8 @@
-<<<<<<< HEAD
+
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "Auth.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,24 +18,4 @@
     "mongodb": "^6.9.0"
   }
 }
-=======
-{
-  "name": "server",
-  "version": "1.0.0",
-  "main": "Auth.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "body-parser": "^1.20.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "mongodb": "^6.9.0"
-  }
-}
->>>>>>> b55e07e953472d39f611ec4a73b23f90cef3a1a7
+
