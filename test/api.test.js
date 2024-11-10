@@ -119,9 +119,9 @@ describe("API Tests", () => {
         .execute("http://13.60.207.211:3001")
         .post("/signup")
         .send({
-          name: "Nicholas Jackson",
-          email: "nicjackson@gmail.com",
-          password: "nic44k++m",
+          name: "Nicky Jackson",
+          email: "jackson@gmail.com",
+          password: "44k++mkal",
         });
       expect(res).to.have.status(201);
       expect(res.body).to.have.property("message", "User created successfully");
@@ -133,9 +133,9 @@ describe("API Tests", () => {
         .execute("http://13.60.207.211:3001")
         .post("/signup")
         .send({
-          name: "Nicholas Jackson",
-          email: "nicjackson@gmail.com",
-          password: "nic",
+          name: "Nicky Jackson",
+          email: "jackson@gmail.com",
+          password: "kal",
         });
       expect(res).to.have.status(500);
       expect(res.body).to.have.property("message", "Password too short");
@@ -146,9 +146,9 @@ describe("API Tests", () => {
         .execute("http://13.60.207.211:3001")
         .post("/signup")
         .send({
-          name: "Nicholas Jackson",
-          email: "nicjackson-email.com",
-          password: "nic44k++m",
+          name: "Nicky Jackson",
+          email: "jackson-email.com",
+          password: "44k++mkal",
         });
       expect(res).to.have.status(500);
       expect(res.body).to.have.property("message", "Invalid email format");
@@ -159,9 +159,9 @@ describe("API Tests", () => {
         .execute("http://13.60.207.211:3001")
         .post("/signup")
         .send({
-          name: "Nicholas Jackson",
-          email: "nicjackson@gmail.com",
-          password: "nic44k++m",
+          name: "Nicky Jackson",
+          email: "jackson@gmail.com",
+          password: "nic44k++mkal",
         });
       expect(res).to.have.status(500);
       expect(res.body).to.have.property("message", "User already exists");
