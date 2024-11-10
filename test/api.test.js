@@ -3,232 +3,168 @@ import chaiHttp from "chai-http";
 
 const chai = use(chaiHttp);
 
-describe("GET /customers", () => {
-  it("should return user data", (done) => {
-    chai.request
-      .execute("http://localhost:3001")
-      .get("/customers")
-      .end((err, res) => {
-        console.log(res.body);
-        if (err) done(err);
-
-        expect(res).to.have.status(200);
-        expect(res.body).to.be.an("array");
-        done();
-      });
-  });
-});
-describe("GET /cartitems", () => {
-    it("should return user data", (done) => {
-      chai.request
-        .execute("http://localhost:3001")
-        .get("/cartitems")
-        .end((err, res) => {
-          console.log(res.body);
-          if (err) done(err);
-  
-          expect(res).to.have.status(200);
-          expect(res.body).to.be.an("array");
-          done();
-        });
+describe("API Tests", () => {
+  describe("GET /customers", () => {
+    it("should return user data", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .get("/customers");
+      expect(res).to.have.status(200);
+      expect(res.body).to.be.an("array");
     });
   });
 
-describe("GET /products", () => {
-  it("should return user data", (done) => {
-    chai.request
-      .execute("http://localhost:3001")
-      .get("/products")
-      .end((err, res) => {
-        console.log(res.body);
-        if (err) done(err);
-
-        expect(res).to.have.status(200);
-        expect(res.body).to.be.an("array");
-        done();
-      });
+  describe("GET /cartitems", () => {
+    it("should return cart items data", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .get("/cartitems");
+      expect(res).to.have.status(200);
+      expect(res.body).to.be.an("array");
+    });
   });
-});
-describe("GET /history", () => {
-  it("should return user data", (done) => {
-    chai.request
-      .execute("http://localhost:3001")
-      .get("/history")
-      .end((err, res) => {
-        console.log(res.body);
-        if (err) done(err);
 
-        expect(res).to.have.status(200);
-        expect(res.body).to.be.an("array");
-        done();
-      });
+  describe("GET /products", () => {
+    it("should return product data", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .get("/products");
+      expect(res).to.have.status(200);
+      expect(res.body).to.be.an("array");
+    });
   });
-});
 
-describe("GET /locations", () => {
-  it("should return user data", (done) => {
-    chai.request
-      .execute("http://localhost:3001")
-      .get("/locations")
-      .end((err, res) => {
-        console.log(res.body); // Log the response body for debugging
-        if (err) return done(err);
-
-        expect(res).to.have.status(200);
-        expect(res.body).to.be.an("array"); // Check that the response is an object
-        done();
-      });
+  describe("GET /history", () => {
+    it("should return order history", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .get("/history");
+      expect(res).to.have.status(200);
+      expect(res.body).to.be.an("array");
+    });
   });
-});
 
-describe("POST /addtocart", () => {
-  it("should add a product to the cart ", (done) => {
-    chai.request
-      .execute("http://localhost:3001")
-      .post("/addtocart")
-      .send({
-        productId: "5690",
-        name: "Bic Stapler",
-        price: 35.99,
-        quantity: 2,
-      })
-      .end((err, res) => {
-        if (err) return done(err);
+  describe("GET /locations", () => {
+    it("should return pickup locations", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .get("/locations");
+      expect(res).to.have.status(200);
+      expect(res.body).to.be.an("array");
+    });
+  });
 
-        expect(res).to.have.status(201);
-        expect(res.body).to.be.an("object");
-        expect(res.body.cart).to.be.an("object");
-        expect(res.body.cart.products).to.include({
-          productId: "5609",
-          name: "Bic Stapler",
+  describe("POST /addLocation", () => {
+    it("should add a new location and return 201", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .post("/addLocation")
+        .send({ Suburb: "Downtown", City: "Cityville", Address: "456 Elm St" });
+      expect(res).to.have.status(201);
+      expect(res.body).to.have.property(
+        "message",
+        "Location added successfully"
+      );
+      expect(res.body).to.have.property("locationId");
+    });
+
+    it("should return 400 if required fields are missing", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .post("/addLocation")
+        .send({ Suburb: "Downtown" }); // Missing City and Address
+      expect(res).to.have.status(400);
+      expect(res.body).to.have.property(
+        "message",
+        "Suburb, City, and Address are required fields"
+      );
+    });
+  });
+
+  describe("POST /addtocart", () => {
+    it("should add a product to the cart", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .post("/addtocart")
+        .send({
+          productId: "4440",
+          name: "Stadeler Puncher",
           price: 35.99,
-          quantity: 2,
+          quantity: 1,
         });
-        done();
-      });
+      expect(res).to.have.status(201);
+      expect(res.body).to.be.an("array");
+    });
   });
-});
-describe("POST /addOrder", () => {
-  it("should add a product to the cart ", (done) => {
-    chai.request
-      .execute("http://localhost:3001")
-      .post("/addOrder")
-      .send({
-        ProductID: "45t67",
-        Transaction_number: "28-765-3000",
-        Transcation_amount: "R29.99",
-        Email: "jerrymyers@micheals.com",
-        Order_number: "4510",
-        Product_name: "Bic Starter Pack",
-      })
-      .end((err, res) => {
-        if (err) return done(err);
 
-        expect(res).to.have.status(201);
-        expect(res.body).to.be.an("object");
-        expect(res.body.cart).to.be.an("object");
-        expect(res.body.cart.products).to.include({
-            ProductID: "45t67",
-            Transaction_number: "28-765-3000",
-            Transcation_amount: "R29.99",
-            Email: "jerrymyers@micheals.com",
-            Order_number: "4510",
-            Product_name: "Bic Starter Pack",
+  describe("POST /addOrder", () => {
+    it("should add an order with email, orderId, and orderNumber", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .post("/addOrder")
+        .send({
+          email: "bertanmichaels@gmail.com",
+          orderId: "789fc20025640158705d22c8",
+          orderNumber: "7894",
         });
-        done();
-      });
+      expect(res).to.have.status(201);
+      expect(res.body).to.have.property("message", "Order added successfully");
+      expect(res.body).to.have.property("orderId");
+    });
+  });
+
+  describe("POST /signup", () => {
+    it("should create a new user", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .post("/signup")
+        .send({
+          name: "Nicholas Jackson",
+          email: "nicjackson@gmail.com",
+          password: "nic44k++m",
+        });
+      expect(res).to.have.status(201);
+      expect(res.body).to.have.property("message", "User created successfully");
+      expect(res.body).to.have.property("userId");
+    });
+
+    it("should return an error if the password is too short", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .post("/signup")
+        .send({
+          name: "Nicholas Jackson",
+          email: "nicjackson@gmail.com",
+          password: "nic",
+        });
+      expect(res).to.have.status(500);
+      expect(res.body).to.have.property("message", "Password too short");
+    });
+
+    it("should return an error if the email format is invalid", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .post("/signup")
+        .send({
+          name: "Nicholas Jackson",
+          email: "nicjackson-email.com",
+          password: "nic44k++m",
+        });
+      expect(res).to.have.status(500);
+      expect(res.body).to.have.property("message", "Invalid email format");
+    });
+
+    it("should return an error if the user already exists", async () => {
+      const res = await chai.request
+        .execute("http://13.60.207.211:3001")
+        .post("/signup")
+        .send({
+          name: "Nicholas Jackson",
+          email: "nicjackson@gmail.com",
+          password: "nic44k++m",
+        });
+      expect(res).to.have.status(500);
+      expect(res.body).to.have.property("message", "User already exists");
+    });
   });
 });
-
-describe("POST /signup", () => {
-  it("should create a new user and return a success message", (done) => {
-    chai.request
-      .execute("http://localhost:3001")
-      .post("/signup")
-      .send({
-        name: "Allan Bart",
-        email: "bartallan@gmail.com",
-        password: "all-bar££>66",
-      })
-      .end((err, res) => {
-        if (err) return done(err);
-
-        expect(res).to.have.status(201);
-        expect(res.body).to.be.an("object");
-        expect(res.body).to.have.property("userId");
-        expect(res.body).to.have.property(
-          "message",
-          "User created successfully"
-        );
-        done();
-      });
-  });
-});
-
-/*
-import chai from 'chai';
-import chaiHttp from 'chai-http';
-import { MongoClient } from 'mongodb';
-
-const { expect } = chai;
-chai.use(chaiHttp);
-
-let apiUrl;
-let db;
-let client;
-
-describe('User API', () => {
-    
-   L
-    before(async () => {
-       
-        apiUrl = 'http://localhost:3001';
-
-       
-        const uri = process.env.MDB_CONNECTION_STRING; // Ensure your connection string is in environment variables
-        client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-
-        try {
-         
-            await client.connect();
-            db = client.db('ThewriteInkco'); // Replace with your actual database name
-            console.log('Connected to MongoDB and setup completed before all tests.');
-
-           
-            await db.collection('Customers').insertOne({ 
-                name: "Test User", 
-                email: "testuser@example.com",
-                password: "testpass123" // Hashing passwords recommended in actual apps
-            });
-
-        } catch (error) {
-            console.error('Failed to connect to MongoDB:', error.message);
-            throw error; // Fail the tests if database connection fails
-        }
-    });
-
-    after(async () => {
-       
-        await db.collection('Customers').deleteMany({ email: "testuser@example.com" });
-
-        await client.close(); // Close MongoDB connection
-        console.log('Disconnected from MongoDB after all tests.');
-    });
-
-    it('should return user data', (done) => {
-        chai.request(apiUrl)
-            .get('/users')
-            .end((err, res) => {
-                if (err) done(err);
-
-                
-                expect(res).to.have.status(200);
-                expect(res.body).to.be.an('array');
-                expect(res.body[0]).to.have.property('email').equal("testuser@example.com");
-
-                done();
-            });
-    });
-});
-
-*/

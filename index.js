@@ -110,7 +110,7 @@ app.get("/cartitems", async (_, res) => {
 });
 
 app.post("/addtocart", async (req, res) => {
-  const product = req.body; 
+  const product = req.body;
 
   if (!product) {
     return res.status(400).json({ message: "Product details are required." });
@@ -128,52 +128,43 @@ app.post("/addtocart", async (req, res) => {
   }
 });
 
-app.post("/addorder", async (req, res) => {
-  try {
-    const order = req.body;
+app.post("/addOrder", async (req, res) => {
+  const { email, orderId, orderNumber } = req.body;
 
-    if (!order.ProductID) {
-      return res.status(400).json({ message: "ProductID is required." });
-    }
-    if (!order.Transaction_number) {
-      return res
-        .status(400)
-        .json({ message: "Transaction number is required." });
-    }
-    if (
-      !order.Transcation_amount ||
-      typeof order.Transcation_amount !== "string"
-    ) {
-      return res
-        .status(400)
-        .json({
-          message: "Transaction amount is required and must be a string.",
-        });
-    }
-    if (!order.Email || !order.Email.includes("@")) {
-      return res.status(400).json({ message: "A valid email is required." });
-    }
-    if (!order.Order_number) {
-      return res.status(400).json({ message: "Order number is required." });
-    }
-    if (!order.Product_name) {
-      return res.status(400).json({ message: "Product name is required." });
-    }
-    const database = client.db("ThewriteInkco");
-    const ordersCollection = database.collection("Customer order");
-
-    const result = await ordersCollection.insertOne({
-      ...order,
-      createdAt: new Date(),
+  if (!email || !orderId || !orderNumber) {
+    return res.status(400).json({
+      message: "Missing required fields: email, orderId, or orderNumber",
+      missingFields: {
+        email: !email,
+        orderId: !orderId,
+        orderNumber: !orderNumber,
+      },
     });
+  }
+
+  try {
+    const database = client.db("ThewriteInkco");
+    const ordersCollection = database.collection("Customer orders");
+
+    const newOrder = {
+      email,
+      orderId,
+      orderNumber,
+      createdAt: new Date(),
+    };
+
+    const result = await ordersCollection.insertOne(newOrder);
 
     res.status(201).json({
       message: "Order added successfully",
       orderId: result.insertedId,
     });
   } catch (error) {
-    console.error("Error adding order:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error(error);
+    res.status(500).json({
+      message: "Error adding order",
+      error: error.message,
+    });
   }
 });
 
@@ -254,6 +245,35 @@ app.get("/locations", async (_, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+app.post("/addLocation", async (req, res) => {
+  const { Suburb, City, Address } = req.body;
+
+  // Check if location data is provided
+  if (!Suburb || !City || !Address) {
+    return res
+      .status(400)
+      .json({ message: "Suburb, City, and Address are required fields" });
+  }
+
+  try {
+    const database = client.db("ThewriteInkco");
+    const locationCollection = database.collection("Pick up Locations");
+
+    const newLocation = { Suburb, City, Address, createdAt: new Date() };
+    const result = await locationCollection.insertOne(newLocation);
+
+    res.status(201).json({
+      message: "Location added successfully",
+      locationId: result.insertedId,
+    });
+  } catch (error) {
+    console.error("Error adding location:", error);
+    res.status(500).json({
+      message: "Error adding location",
+      error: error.message,
+    });
+  }
+});
 
 app.get("/history", async (_, res) => {
   try {
@@ -270,7 +290,7 @@ app.get("/history", async (_, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://13.60.207.211:${PORT}`);
 });
 
 connectToMongo();
