@@ -11,6 +11,7 @@ describe("API Tests", () => {
         .get("/customers");
       expect(res).to.have.status(200);
       expect(res.body).to.be.an("array");
+      console.log(res.body);
     });
   });
 
@@ -21,6 +22,7 @@ describe("API Tests", () => {
         .get("/cartitems");
       expect(res).to.have.status(200);
       expect(res.body).to.be.an("array");
+      console.log(res.body);
     });
   });
 
@@ -31,6 +33,7 @@ describe("API Tests", () => {
         .get("/products");
       expect(res).to.have.status(200);
       expect(res.body).to.be.an("array");
+      console.log(res.body);
     });
   });
 
@@ -41,6 +44,7 @@ describe("API Tests", () => {
         .get("/history");
       expect(res).to.have.status(200);
       expect(res.body).to.be.an("array");
+      console.log(res.body);
     });
   });
 
@@ -51,6 +55,7 @@ describe("API Tests", () => {
         .get("/locations");
       expect(res).to.have.status(200);
       expect(res.body).to.be.an("array");
+      console.log(res.body);
     });
   });
 
@@ -66,6 +71,7 @@ describe("API Tests", () => {
         "Location added successfully"
       );
       expect(res.body).to.have.property("locationId");
+      console.log(res.body);
     });
 
     it("should return 400 if required fields are missing", async () => {
@@ -78,6 +84,7 @@ describe("API Tests", () => {
         "message",
         "Suburb, City, and Address are required fields"
       );
+       console.log(res.body);
     });
   });
 
@@ -111,6 +118,7 @@ describe("API Tests", () => {
       expect(res).to.have.status(201);
       expect(res.body).to.have.property("message", "Order added successfully");
       expect(res.body).to.have.property("orderId");
+      console.log(res.body);
     });
   });
 
@@ -127,6 +135,7 @@ describe("API Tests", () => {
       expect(res).to.have.status(201);
       expect(res.body).to.have.property("message", "User created successfully");
       expect(res.body).to.have.property("userId");
+       console.log(res.body);
     });
 
     it("should return an error if the password is too short", async () => {
