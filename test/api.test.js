@@ -94,6 +94,7 @@ describe("API Tests", () => {
         });
       expect(res).to.have.status(201);
       expect(res.body).to.be.an("array");
+      console.log(res.body);
     });
   });
 
