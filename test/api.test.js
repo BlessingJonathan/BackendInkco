@@ -93,7 +93,7 @@ describe("API Tests", () => {
           quantity: 1,
         });
       expect(res).to.have.status(201);
-      expect(res.body).to.be.an("array");
+      expect(res.body).to.be.an("object");
       console.log(res.body);
     });
   });
