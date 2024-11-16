@@ -3,7 +3,7 @@ import express from "express";
 import { MongoClient } from "mongodb";
 import cors from "cors";
 import bodyParser from "body-parser";
-//import axios from 'axios';
+import {authenticateUser) from '../server/Auth.js'
 dotenv.config();
 
 const app = express();
@@ -14,10 +14,10 @@ app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json());
 
-let db; // Global variable to hold the database connection
+let db; 
 let client;
 
-// Connect to MongoDB and set up the database
+
 function connectToMongo() {
   client = new MongoClient(uri, {
     useNewUrlParser: true,
@@ -31,13 +31,10 @@ function connectToMongo() {
     })
     .catch((error) => {
       console.log("Failed to connect to MongoDB:", error.message);
-      process.exit(1); // Exit the process if unable to connect to MongoDB
+      process.exit(1);
     });
 }
 
-// Invoke the function
-
-// API endpoint for user signup
 app.post("/signup", async (req, res) => {
   try {
     const user = req.body;
@@ -56,10 +53,10 @@ app.post("/signup", async (req, res) => {
       ...user,
       createdAt: new Date(),
     });
-
+    const userId = await registerUser(db, email, password);
     res.status(201).json({
       message: "User created successfully",
-      userId: result.insertedId,
+      userId
     });
   } catch (error) {
     console.error("Error inserting user: ", error);
@@ -71,11 +68,8 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   try {
-    const { authenticateUser } = await import("auth");
-
     const { email, password } = req.body;
-    const user = await authenticateUser(email, password);
-
+    const user = await authenticateUser(db, email, password); 
     res.json({ message: "Login successful", user });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -290,7 +284,7 @@ app.get("/history", async (_, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running on http://13.60.207.211:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 connectToMongo();
