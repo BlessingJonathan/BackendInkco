@@ -1,3 +1,4 @@
+/* eslint-disable jest/valid-expect */
 import { expect, use } from "chai";
 import chaiHttp from "chai-http";
 
@@ -7,7 +8,7 @@ describe("API Tests", () => {
   describe("GET /customers", () => {
     it("should return user data", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .get("/customers");
       expect(res).to.have.status(200);
       expect(res.body).to.be.an("array");
@@ -18,7 +19,7 @@ describe("API Tests", () => {
   describe("GET /cartitems", () => {
     it("should return cart items data", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .get("/cartitems");
       expect(res).to.have.status(200);
       expect(res.body).to.be.an("array");
@@ -29,7 +30,7 @@ describe("API Tests", () => {
   describe("GET /products", () => {
     it("should return product data", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .get("/products");
       expect(res).to.have.status(200);
       expect(res.body).to.be.an("array");
@@ -40,7 +41,7 @@ describe("API Tests", () => {
   describe("GET /history", () => {
     it("should return order history", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .get("/history");
       expect(res).to.have.status(200);
       expect(res.body).to.be.an("array");
@@ -51,7 +52,7 @@ describe("API Tests", () => {
   describe("GET /locations", () => {
     it("should return pickup locations", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .get("/locations");
       expect(res).to.have.status(200);
       expect(res.body).to.be.an("array");
@@ -62,7 +63,7 @@ describe("API Tests", () => {
   describe("POST /addLocation", () => {
     it("should add a new location and return 201", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .post("/addLocation")
         .send({ Suburb: "Downtown", City: "Cityville", Address: "456 Elm St" });
       expect(res).to.have.status(201);
@@ -76,7 +77,7 @@ describe("API Tests", () => {
 
     it("should return 400 if required fields are missing", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .post("/addLocation")
         .send({ Suburb: "Downtown" }); // Missing City and Address
       expect(res).to.have.status(400);
@@ -91,7 +92,7 @@ describe("API Tests", () => {
   describe("POST /addtocart", () => {
     it("should add a product to the cart", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .post("/addtocart")
         .send({
           productId: "4440",
@@ -108,7 +109,7 @@ describe("API Tests", () => {
   describe("POST /addOrder", () => {
     it("should add an order with email, orderId, and orderNumber", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .post("/addOrder")
         .send({
           email: "bertanmichaels@gmail.com",
@@ -125,7 +126,7 @@ describe("API Tests", () => {
   describe("POST /signup", () => {
     it("should create a new user", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .post("/signup")
         .send({
           name: "Dillion Jays",
@@ -140,7 +141,7 @@ describe("API Tests", () => {
 
     it("should return an error if the password is too short", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .post("/signup")
         .send({
           name: "Dillion Jays",
@@ -153,7 +154,7 @@ describe("API Tests", () => {
 
     it("should return an error if the email format is invalid", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .post("/signup")
         .send({
           name: "Dillion Jays",
@@ -166,7 +167,7 @@ describe("API Tests", () => {
 
     it("should return an error if the user already exists", async () => {
       const res = await chai.request
-        .execute("http://13.60.207.211:3001")
+        .execute("http://localhost:3001")
         .post("/signup")
         .send({
           name: "Dillion Jays",
