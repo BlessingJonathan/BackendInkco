@@ -1,82 +1,67 @@
-import dotenv from "dotenv";
-import express from "express";
-import { MongoClient } from "mongodb";
-import cors from "cors";
-import bodyParser from "body-parser";
-//import axios from 'axios';
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import { registerUser, authenticateUser } from '../server/Auth';
+import {MongoClient} from 'mongodb'
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const uri = process.env.MDB_CONNECTION_STRING;
 
+
 app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json());
 
-let db; // Global variable to hold the database connection
+let db;
 let client;
 
-// Connect to MongoDB and set up the database
-function connectToMongo() {
-  client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  return client
-    .connect()
-    .then(() => {
-      db = client.db("ThewriteInkco"); // Database name
-      console.log("Connected to MongoDB");
-    })
-    .catch((error) => {
-      console.log("Failed to connect to MongoDB:", error.message);
-      process.exit(1); // Exit the process if unable to connect to MongoDB
+async function connectToMongo() {
+  try {
+    client = new MongoClient(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
+    await client.connect();
+    db = client.db('ThewriteInkco'); 
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error.message);
+    process.exit(1);
+  }
 }
 
-// Invoke the function
 
-// API endpoint for user signup
-app.post("/signup", async (req, res) => {
+app.use((_, res, next) => {
+  if (!db) {
+    return res.status(500).json({ message: 'Database not initialized' });
+  }
+  next();
+});
+
+app.post('/signup', async (req, res) => {
   try {
-    const user = req.body;
+    const { email, password } = req.body;
 
-    if (user.password.length < 6) throw new Error("Password too short");
-    if (!user.email.includes("@")) throw new Error("Invalid email format");
+    if (password.length < 6) throw new Error('Password too short');
+    if (!email.includes('@')) throw new Error('Invalid email format');
 
-    const collection = db.collection("Customers");
-
-    const existingUser = await collection.findOne({ email: user.email });
-    if (existingUser) {
-      throw new Error("User already exists");
-    }
-
-    const result = await collection.insertOne({
-      ...user,
-      createdAt: new Date(),
-    });
-
-    res.status(201).json({
-      message: "User created successfully",
-      userId: result.insertedId,
-    });
+    const userId = await registerUser(db, email, password); 
+    res.status(201).json({ message: 'User created successfully', userId });
   } catch (error) {
-    console.error("Error inserting user: ", error);
-    res
-      .status(500)
-      .json({ message: error.message || `Internal Server Error: ${error}` });
+    console.error('Error inserting user:', error);
+    res.status(500).json({ message: error.message });
   }
 });
 
-app.post("/login", async (req, res) => {
+app.post('/login', async (req, res) => {
   try {
-    const { authenticateUser } = await import("auth");
-
     const { email, password } = req.body;
-    const user = await authenticateUser(email, password);
-
-    res.json({ message: "Login successful", user });
+    const user = await authenticateUser(db, email, password); 
+    res.json({ message: 'Login successful', user });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -290,7 +275,7 @@ app.get("/history", async (_, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running on http://13.60.207.211:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 connectToMongo();
