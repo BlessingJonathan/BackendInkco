@@ -1,78 +1,100 @@
 import dotenv from "dotenv";
 import express from "express";
-import { MongoClient } from "mongodb";
 import cors from "cors";
 import bodyParser from "body-parser";
-import {authenticateUser) from '../server/Auth.js'
+import { MongoClient } from "mongodb";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const uri = process.env.MDB_CONNECTION_STRING;
+const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret";
 
 app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json());
 
-let db; 
+const authenticateToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1]; 
+  if (!token) {
+    return res.status(401).json({ message: "Access token is missing" });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: "Invalid or expired token" });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+let db;
 let client;
 
-
-function connectToMongo() {
-  client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  return client
-    .connect()
-    .then(() => {
-      db = client.db("ThewriteInkco"); // Database name
-      console.log("Connected to MongoDB");
-    })
-    .catch((error) => {
-      console.log("Failed to connect to MongoDB:", error.message);
-      process.exit(1);
+async function connectToMongo() {
+  try {
+    client = new MongoClient(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
+    await client.connect();
+    db = client.db("ThewriteInkco");
+    console.log("Connected to MongoDB");
+  } catch (error) {
+    console.error("Failed to connect to MongoDB:", error.message);
+    process.exit(1);
+  }
 }
+
+app.use((_, res, next) => {
+  if (!db) {
+    return res.status(500).json({ message: "Database not initialized" });
+  }
+  next();
+});
 
 app.post("/signup", async (req, res) => {
   try {
-    const user = req.body;
+    const { email, password } = req.body;
 
-    if (user.password.length < 6) throw new Error("Password too short");
-    if (!user.email.includes("@")) throw new Error("Invalid email format");
+    if (password.length < 6) throw new Error("Password must be at least 6 characters long.");
+    if (!email.includes("@")) throw new Error("Invalid email format.");
 
-    const collection = db.collection("Customers");
+    const existingUser = await db.collection("Customers").findOne({ email });
+    if (existingUser) throw new Error("User already exists.");
 
-    const existingUser = await collection.findOne({ email: user.email });
-    if (existingUser) {
-      throw new Error("User already exists");
-    }
 
-    const result = await collection.insertOne({
-      ...user,
-      createdAt: new Date(),
-    });
-    const userId = await registerUser(db, email, password);
-    res.status(201).json({
-      message: "User created successfully",
-      userId
-    });
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.collection("Customers").insertOne({ email, password: hashedPassword });
+
+    res.status(201).json({ message: "User created successfully", email });
   } catch (error) {
-    console.error("Error inserting user: ", error);
-    res
-      .status(500)
-      .json({ message: error.message || `Internal Server Error: ${error}` });
+    console.error("Error during signup:", error);
+    res.status(400).json({ message: error.message });
   }
 });
 
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await authenticateUser(db, email, password); 
-    res.json({ message: "Login successful", user });
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+
+    const user = await db.collection("Customers").findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) return res.status(401).json({ message: "Invalid password." });
+
+    const token = jwt.sign({ email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+
+    res.status(200).json({ message: "Login successful", token, email: user.email });
+  } catch (error) {
+    console.error("Error during login:", error);
+    res.status(400).json({ message: error.message });
   }
 });
 
@@ -89,22 +111,21 @@ app.get("/products", async (_, res) => {
     res.status(500).json({ message: "Error fetching products" });
   }
 });
-app.get("/cartitems", async (_, res) => {
+app.get("/cartitems", authenticateToken, async (req, res) => {
   try {
-    await client.connect();
     const database = client.db("ThewriteInkco");
     const cartItemsCollection = database.collection("Cart");
 
-    const cartItems = await cartItemsCollection.find().toArray();
+    const cartItems = await cartItemsCollection.find({ email: req.user.email }).toArray();
     res.json(cartItems);
   } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ message: "Error fetching products" });
+    console.error("Error fetching cart items:", error);
+    res.status(500).json({ message: "Error fetching cart items" });
   }
 });
 
-app.post("/addtocart", async (req, res) => {
-  const product = req.body;
+app.post("/addtocart", authenticateToken, async (req, res) => {
+  const { product } = req.body;
 
   if (!product) {
     return res.status(400).json({ message: "Product details are required." });
@@ -113,7 +134,7 @@ app.post("/addtocart", async (req, res) => {
   try {
     const database = client.db("ThewriteInkco");
     const cartCollection = database.collection("Cart");
-    await cartCollection.insertOne({ product });
+    await cartCollection.insertOne({ email: req.user.email, product });
 
     res.status(201).json({ message: "Product added to cart", product });
   } catch (error) {
@@ -122,7 +143,8 @@ app.post("/addtocart", async (req, res) => {
   }
 });
 
-app.post("/addOrder", async (req, res) => {
+
+app.post("/addOrder",authenticateToken, async (req, res) => {
   const { email, orderId, orderNumber } = req.body;
 
   if (!email || !orderId || !orderNumber) {
@@ -141,7 +163,7 @@ app.post("/addOrder", async (req, res) => {
     const ordersCollection = database.collection("Customer orders");
 
     const newOrder = {
-      email,
+      email: req.user.email,
       orderId,
       orderNumber,
       createdAt: new Date(),
@@ -282,9 +304,15 @@ app.get("/history", async (_, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+app.post("/refresh-token", authenticateToken, (req, res) => {
+  const email = req.user.email;
+  const newToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: "1h" });
+  res.status(200).json({ token: newToken });
+});
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 connectToMongo();
+
