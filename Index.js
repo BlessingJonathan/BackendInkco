@@ -311,7 +311,7 @@ app.post("/refresh-token", authenticateToken, (req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running on http://51.20.41.135:${PORT}`);
+  console.log(`Server is running on http://13.60.236.181:${PORT}`);
 });
 
 connectToMongo();
